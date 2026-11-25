@@ -1,0 +1,39 @@
+name: Global Trend Radar
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: radar-production
+  cancel-in-progress: false
+jobs:
+  radar:
+    if: github.event_name == 'workflow_dispatch' || vars.RADAR_SCHEDULE_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python radar.py collect --require-db
+      - run: python radar.py alerts --send --require-db
+      - name: Scheduled reports (UTC)
+        run: |
+          if [ "$(date -u +%H)" = 05 ]; then
+            python radar.py report --days 1 --send --require-db >/dev/null
+            if [ "$(date -u +%u)" = 1 ]; then python radar.py report --days 7 --send --require-db >/dev/null; fi
+            if [ "$(date -u +%d)" = 01 ]; then python radar.py report --days 30 --send --require-db >/dev/null; fi
+          fi
+      - if: always()
+        run: python radar.py health --require-db
