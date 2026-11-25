@@ -1,0 +1,132 @@
+[
+  {
+    "id": "hn",
+    "name": "Hacker News",
+    "url": "https://news.ycombinator.com/rss",
+    "category": "teknoloji",
+    "kind": "rss",
+    "trust": "topluluk",
+    "enabled": true,
+    "interval_hours": 1
+  },
+  {
+    "id": "google_trends_us",
+    "name": "Google Trends US",
+    "url": "https://trends.google.com/trending/rss?geo=US",
+    "category": "gündem",
+    "kind": "rss",
+    "trust": "arama sinyali",
+    "enabled": true,
+    "interval_hours": 1
+  },
+  {
+    "id": "google_trends_tr",
+    "name": "Google Trends TR",
+    "url": "https://trends.google.com/trending/rss?geo=TR",
+    "category": "gündem",
+    "kind": "rss",
+    "trust": "arama sinyali",
+    "enabled": true,
+    "interval_hours": 1
+  },
+  {
+    "id": "openai",
+    "name": "OpenAI",
+    "url": "https://openai.com/news/rss.xml",
+    "category": "yapay zekâ",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": true,
+    "interval_hours": 6
+  },
+  {
+    "id": "github_blog",
+    "name": "GitHub Blog",
+    "url": "https://github.blog/feed/",
+    "category": "teknoloji",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": true,
+    "interval_hours": 6
+  },
+  {
+    "id": "fed",
+    "name": "Federal Reserve",
+    "url": "https://www.federalreserve.gov/feeds/press_all.xml",
+    "category": "ekonomi",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": true,
+    "interval_hours": 6
+  },
+  {
+    "id": "sec",
+    "name": "SEC press releases",
+    "url": "https://www.sec.gov/news/pressreleases.rss",
+    "category": "ekonomi",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": false,
+    "interval_hours": 12
+  },
+  {
+    "id": "bbc",
+    "name": "BBC World",
+    "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "category": "gündem",
+    "kind": "rss",
+    "trust": "editoryal kaynak",
+    "enabled": false,
+    "interval_hours": 1
+  },
+  {
+    "id": "nyt",
+    "name": "New York Times World",
+    "url": "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+    "category": "gündem",
+    "kind": "rss",
+    "trust": "editoryal kaynak",
+    "enabled": false,
+    "interval_hours": 3
+  },
+  {
+    "id": "ft",
+    "name": "Financial Times",
+    "url": "https://www.ft.com/rss/home/international",
+    "category": "ekonomi",
+    "kind": "rss",
+    "trust": "editoryal kaynak",
+    "enabled": false,
+    "interval_hours": 3
+  },
+  {
+    "id": "bloomberg",
+    "name": "Bloomberg Markets",
+    "url": "https://www.bloomberg.com/feeds/markets/news.rss",
+    "category": "ekonomi",
+    "kind": "rss",
+    "trust": "editoryal kaynak",
+    "enabled": false,
+    "interval_hours": 3
+  },
+  {
+    "id": "shopify",
+    "name": "Shopify Blog",
+    "url": "https://www.shopify.com/blog.atom",
+    "category": "e-ticaret",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": false,
+    "interval_hours": 12
+  },
+  {
+    "id": "github_discovery",
+    "name": "GitHub Search (yeni depo keşfi)",
+    "url": "https://api.github.com/search/repositories",
+    "category": "teknoloji",
+    "kind": "github_search",
+    "trust": "platform arama sinyali",
+    "enabled": true,
+    "interval_hours": 6
+  }
+]
