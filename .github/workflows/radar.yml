@@ -3,6 +3,15 @@ on:
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
+    inputs:
+      test_notification:
+        description: 'Send a daily report to configured notification channels'
+        type: boolean
+        default: false
+      force_refresh:
+        description: 'Ignore source intervals for this manual run'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -10,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   radar:
-    if: github.event_name == 'workflow_dispatch' || vars.RADAR_SCHEDULE_ENABLED == 'true'
+    if: github.event_name == 'workflow_dispatch' || vars.RADAR_SCHEDULE_ENABLED != 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 4
     env:
@@ -26,8 +35,19 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
-      - run: python radar.py collect --require-db
+      - name: Collect sources
+        env:
+          FORCE_REFRESH: ${{ inputs.force_refresh }}
+        run: |
+          if [ "$FORCE_REFRESH" = true ]; then
+            python radar.py collect --require-db --force
+          else
+            python radar.py collect --require-db
+          fi
       - run: python radar.py alerts --send --require-db
+      - name: Manual notification test
+        if: github.event_name == 'workflow_dispatch' && inputs.test_notification
+        run: python radar.py report --days 1 --send --require-db >/dev/null
       - name: Scheduled reports (UTC)
         run: |
           if [ "$(date -u +%H)" = 05 ]; then
