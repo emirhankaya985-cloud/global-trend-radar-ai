@@ -1,0 +1,59 @@
+name: Telegram Connection Diagnostics
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/telegram-diagnostics.yml']
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - name: Read-only Telegram connection checks
+        run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.request, urllib.error
+          token=os.environ.get("TELEGRAM_BOT_TOKEN","")
+          chat=os.environ.get("TELEGRAM_CHAT_ID","")
+          if not re.fullmatch(r"[0-9]+:[A-Za-z0-9_-]+",token):
+              print("token_format=invalid"); raise SystemExit(1)
+          if not re.fullmatch(r"-?[0-9]+",chat):
+              print("chat_id_format=invalid"); raise SystemExit(1)
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args,**kwargs): return None
+          opener=urllib.request.build_opener(NoRedirect())
+          def call(method,params):
+              try:
+                  req=urllib.request.Request("https://api.telegram.org/bot"+token+"/"+method, data=json.dumps(params).encode(),headers={"Content-Type":"application/json"},method="POST")
+                  with opener.open(req,timeout=10) as response:
+                      data=json.loads(response.read(65536))
+                  if data.get("ok") is True:
+                      print(method+"=ok")
+                      return data.get("result",{})
+                  code=data.get("error_code")
+                  print(method+"=api_error_"+str(code if isinstance(code,int) else "unknown"))
+              except urllib.error.HTTPError as e:
+                  print(method+"=http_"+str(e.code))
+              except Exception as e:
+                  print(method+"=transport_error_"+type(e).__name__)
+              return None
+          bot=call("getMe",{})
+          if not bot: raise SystemExit(1)
+          info=call("getChat",{"chat_id":chat})
+          if not info: raise SystemExit(1)
+          chat_type=info.get("type")
+          print("chat_type="+(chat_type if chat_type in ("channel","group","supergroup","private") else "other"))
+          member=call("getChatMember",{"chat_id":chat,"user_id":bot["id"]})
+          if not member: raise SystemExit(1)
+          status=member.get("status")
+          print("member_status="+(status if status in ("creator","administrator","member","restricted","left","kicked") else "unknown"))
+          if chat_type=="channel":
+              can_post=status=="creator" or (status=="administrator" and member.get("can_post_messages") is True)
+              print("channel_post_permission="+str(can_post).lower())
+              if not can_post: raise SystemExit(1)
+          PY
