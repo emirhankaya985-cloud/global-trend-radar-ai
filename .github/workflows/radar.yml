@@ -1,11 +1,14 @@
 name: Global Trend Radar
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/radar.yml']
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
     inputs:
       test_notification:
-        description: 'Send a daily report to configured notification channels'
+        description: 'Send a safe connection test to configured notification channels'
         type: boolean
         default: false
       force_refresh:
@@ -46,12 +49,16 @@ jobs:
           fi
       - run: python radar.py alerts --send --require-db
       - name: Manual notification test
-        if: github.event_name == 'workflow_dispatch' && inputs.test_notification
-        run: python radar.py report --days 1 --send --require-db >/dev/null
-      - name: Scheduled reports (UTC)
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.test_notification)
+        run: python send_digest.py --test
+      - name: Daily Turkish report (catch up after 07:30 Istanbul)
+        if: github.event_name == 'schedule'
+        run: |
+          if [ "$(date -u +%H)" -ge 05 ]; then python send_digest.py; fi
+      - name: Scheduled weekly and monthly reports (UTC)
+        if: github.event_name == 'schedule'
         run: |
           if [ "$(date -u +%H)" = 05 ]; then
-            python radar.py report --days 1 --send --require-db >/dev/null
             if [ "$(date -u +%u)" = 1 ]; then python radar.py report --days 7 --send --require-db >/dev/null; fi
             if [ "$(date -u +%d)" = 01 ]; then python radar.py report --days 30 --send --require-db >/dev/null; fi
           fi
