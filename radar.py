@@ -49,6 +49,14 @@ def parse_feed(body,source):
             elif k not in fields: fields[k]=v
         title=clean(fields.get('title')); url=next((x for l in links if (x:=canonical(l))),None)
         if not title or not url: continue
+        if source['id'] in ('google_trends_us','google_trends_tr') and urlsplit(url).hostname=='trends.google.com':
+            # Feed items share the same link; use a distinct official Explore link per topic/day.
+            geo='US' if source['id'].endswith('_us') else 'TR'
+            published=dateval(fields.get('pubDate') or fields.get('published') or fields.get('updated'))
+            day=published[:10] if published else None
+            params={'geo':geo,'q':title}
+            if day: params['date']=day+' '+day
+            url='https://trends.google.com/trends/explore?'+urlencode(params)
         rows.append({'id':digest(source['id']+'\0'+url),'source':source['id'],'category':categorize(title,source['category']),'title':title,'url':url,'published_at':dateval(fields.get('pubDate') or fields.get('published') or fields.get('updated')),'first_seen':stamp(),'topic':topic(title),'signal':clean(fields.get('approx_traffic')) or None})
         if len(rows)>=50: break
     return rows

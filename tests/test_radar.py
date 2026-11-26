@@ -64,3 +64,14 @@ def test_notification_unverified(db,monkeypatch):
     def fail(*a,**k):raise TimeoutError()
     monkeypatch.setattr(radar.OPENER,'open',fail)
     assert radar.notify(db,'test','report-key')[0]['status']=='unverified';assert radar.notify(db,'test','report-key')==[]
+
+def test_google_trends_shared_link(db):
+    s=dict(S,id='google_trends_us')
+    body=b'<rss xmlns:ht="https://trends.google.com/trending/rss"><channel><item><title>Topic A</title><link>https://trends.google.com/trending/rss?geo=US</link><pubDate>Wed, 25 Nov 2026 12:00:00 GMT</pubDate><ht:approx_traffic>100+</ht:approx_traffic></item><item><title>Topic B</title><link>https://trends.google.com/trending/rss?geo=US</link><pubDate>Wed, 25 Nov 2026 12:00:00 GMT</pubDate></item></channel></rss>'
+    rows=radar.parse_feed(body,s)
+    assert len(rows)==2
+    assert rows[0]['url']!=rows[1]['url']
+    assert rows[0]['signal']=='100+'
+    assert 'geo=US' in rows[0]['url']
+    assert sum(db.add(row) for row in rows)==2
+    assert sum(db.add(row) for row in radar.parse_feed(body,s))==0
