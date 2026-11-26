@@ -47,11 +47,11 @@ jobs:
       - run: python radar.py alerts --send --require-db
       - name: Manual notification test
         if: github.event_name == 'workflow_dispatch' && inputs.test_notification
-        run: python radar.py report --days 1 --send --require-db >/dev/null
+        run: python send_digest.py --test
       - name: Scheduled reports (UTC)
         run: |
           if [ "$(date -u +%H)" = 05 ]; then
-            python radar.py report --days 1 --send --require-db >/dev/null
+            python send_digest.py
             if [ "$(date -u +%u)" = 1 ]; then python radar.py report --days 7 --send --require-db >/dev/null; fi
             if [ "$(date -u +%d)" = 01 ]; then python radar.py report --days 30 --send --require-db >/dev/null; fi
           fi
