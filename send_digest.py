@@ -1,17 +1,18 @@
-"""Deliver private, generated Turkish digests without printing report content."""
+"""Deliver Turkish public-source digests without logging private content."""
 import argparse
 import datetime as dt
 import json
 import os
 from zoneinfo import ZoneInfo
-from radar import Store, notify, report, ROOT
+from radar import Store, notify
 
 def message_for(db, today):
-    row = db.q("SELECT report_text FROM radar_turkish_digests WHERE report_date=?", (today,)).fetchone()
-    if row:
-        return row[0]
-    sources = json.loads((ROOT / "sources.json").read_text())
-    return "Türkçe AI özeti henüz hazır değil; aşağıdaki rapor özgün başlıklar içerebilir.\n" + report(db, 1, sources)
+    row = db.q("SELECT report_text, newsletter_count FROM radar_turkish_digests WHERE report_date=?", (today,)).fetchone()
+    if not row:
+        return None, "digest_not_ready"
+    if row[1] != 0:
+        return None, "private_newsletter_digest"
+    return row[0], "ready"
 
 def main():
     parser = argparse.ArgumentParser()
@@ -25,9 +26,15 @@ def main():
         today = dt.datetime.now(ZoneInfo("Europe/Istanbul")).date()
         key = "turkish-daily:" + today.isoformat()
         if args.test:
-            key += ":test:" + os.environ.get("GITHUB_RUN_ID", "local")
-        deliveries = notify(db, message_for(db, today), key)
-        print(json.dumps({"deliveries": deliveries}, ensure_ascii=False))
+            key = "notification-test:" + os.environ.get("GITHUB_RUN_ID", "local")
+            msg = "Global Trend Radar AI | Telegram/ntfy bağlantı testi. Özel veri içermez."
+        else:
+            msg, status = message_for(db, today)
+            if msg is None:
+                print(json.dumps({"status": status}))
+                return 0
+        deliveries = notify(db, msg, key)
+        print(json.dumps({"deliveries": deliveries, "configured": {"telegram": bool(os.getenv("TELEGRAM_BOT_TOKEN") and os.getenv("TELEGRAM_CHAT_ID")), "ntfy": bool(os.getenv("NTFY_TOPIC"))}}, ensure_ascii=False))
         if args.test and not any(x["status"] == "sent" for x in deliveries):
             return 1
         return int(any(x["status"] != "sent" for x in deliveries))
