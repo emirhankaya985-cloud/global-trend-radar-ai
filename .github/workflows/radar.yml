@@ -2,7 +2,7 @@ name: Global Trend Radar
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/radar.yml']
+    paths: ['.github/workflows/radar.yml', 'send_digest.py']
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
