@@ -27,3 +27,6 @@ Bağımsız altı ajan çalıştırma aracı yok; tek oturumda iş paketleri uyg
 - Public depo oluşturuldu, README başlangıç commit'i doğrulandı; pilot dosyaları ayrı `radar-v0.1` dalına aktarılıyor.
 - Yerel `python -m pytest -q`: 29/29 başarılı.
 - Canlı otomasyon, CI ve bildirim henüz doğrulanmadı. Gizli bağlantılar public dosyalara konulmadı.
+
+## Üretime geçiş
+194 kayıt ve bir Telegram teslimatı doğrulandı. Kamu ve özel raporlar ayrıldı, dönemsel AI görevleri tanımlandı. Günlük gerçek rapor teslimatı ve yeni RSS bağlantıları bu sürümde doğrulanacak; tam hafta/ay geçmişi henüz yok.

@@ -128,5 +128,35 @@
     "trust": "platform arama sinyali",
     "enabled": true,
     "interval_hours": 6
+  },
+  {
+    "id": "ecb",
+    "name": "European Central Bank",
+    "url": "https://www.ecb.europa.eu/rss/press.html",
+    "category": "ekonomi",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": true,
+    "interval_hours": 12
+  },
+  {
+    "id": "census_indicators",
+    "name": "US Census Economic Indicators",
+    "url": "https://www.census.gov/economic-indicators/indicator.xml",
+    "category": "e-ticaret",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": true,
+    "interval_hours": 12
+  },
+  {
+    "id": "bls_jolts",
+    "name": "US Bureau of Labor Statistics JOLTS",
+    "url": "https://www.bls.gov/feed/jolts.rss",
+    "category": "kariyer",
+    "kind": "rss",
+    "trust": "birincil kaynak",
+    "enabled": true,
+    "interval_hours": 12
   }
 ]

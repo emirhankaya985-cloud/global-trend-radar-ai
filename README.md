@@ -53,3 +53,6 @@ Saatlik tarama UTC :17. Günlük rapor 05 UTC (08 TR), pazartesi haftalık, ayı
 Diğer projeler için `export` komutu sürümlü JSON, `health` komutu metaveri üretir; gelecekte salt okunur rol veya servis aracılığıyla erişim. Şimdilik başka hiçbir depo veya DB değiştirilmedi. Çıktılar özel tutulmalı; ham bülten içeriği asla ortak depoya taşınmamalıdır.
 
 Ayrıntılar: [Kaynak araştırması](docs/SOURCES.md), [Checkpoint](CHECKPOINT.md).
+
+## Üretim raporları
+Kamu kaynaklı AI raporları `radar_public_digests` tablosuna her gün 07:45 Türkiye saatiyle yazılır; Pazartesi 7 günlük, ayın 1'i 30 günlük rapor da oluşturulur. GitHub Actions 08:00 sonrası hazır raporları teslim eder; gecikmede sonraki çalıştırma kontrol eder. Gmail etiketli özel raporlar ayrı tabloda kalır ve gönderim modülü bunları okumaz. Takvim raporlarının ilk doğal çalıştırmaları ayrıca doğrulanmalıdır. Yeni resmî RSS adayları: ECB, Census Economic Indicators, BLS JOLTS. Başarılı kaynak durumu yalnız gerçek fetch kayıtlarından doğrulanır. Ücretli API yok; ücretsiz kota ve ChatGPT görev erişimine bağlıdır.

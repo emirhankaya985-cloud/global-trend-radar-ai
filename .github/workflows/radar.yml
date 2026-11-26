@@ -2,7 +2,7 @@ name: Global Trend Radar
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/radar.yml', 'send_digest.py']
+    paths: ['.github/workflows/radar.yml', 'send_digest.py', 'sources.json']
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
@@ -49,18 +49,11 @@ jobs:
           fi
       - run: python radar.py alerts --send --require-db
       - name: Manual notification test
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.test_notification)
+        if: github.event_name == 'workflow_dispatch' && inputs.test_notification
         run: python send_digest.py --test
-      - name: Daily Turkish report (catch up after 07:30 Istanbul)
-        if: github.event_name == 'schedule'
+      - name: Public Turkish daily and periodic reports
+        if: github.event_name != 'workflow_dispatch' || !inputs.test_notification
         run: |
-          if [ "$(date -u +%H)" -ge 05 ]; then python send_digest.py; fi
-      - name: Scheduled weekly and monthly reports (UTC)
-        if: github.event_name == 'schedule'
-        run: |
-          if [ "$(date -u +%H)" = 05 ]; then
-            if [ "$(date -u +%u)" = 1 ]; then python radar.py report --days 7 --send --require-db >/dev/null; fi
-            if [ "$(date -u +%d)" = 01 ]; then python radar.py report --days 30 --send --require-db >/dev/null; fi
-          fi
+          if [ "$(TZ=Europe/Istanbul date +%H%M)" -ge 800 ]; then python send_digest.py; fi
       - if: always()
         run: python radar.py health --require-db

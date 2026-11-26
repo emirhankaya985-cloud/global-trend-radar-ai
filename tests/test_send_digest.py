@@ -2,21 +2,25 @@ import datetime as dt
 import send_digest
 
 class DB:
-    def __init__(self, row):
-        self.row = row
-    def q(self, sql, args):
-        assert "newsletter_count" in sql
-        assert "WHERE report_date=?" in sql
-        assert args == (dt.date(2026, 11, 26),)
+    def __init__(self,row,days=1): self.row=row; self.days=days
+    def q(self,sql,args):
+        assert "FROM radar_public_digests" in sql
+        assert "radar_turkish_digests" not in sql
+        assert args==(self.days,dt.date(2026,11,26))
         return self
-    def fetchone(self):
-        return self.row
+    def fetchone(self): return self.row
 
 def test_public_digest():
-    assert send_digest.message_for(DB(("Türkçe özet", 0)), dt.date(2026,11,26)) == ("Türkçe özet", "ready")
+    assert send_digest.message_for(DB(("Türkçe özet",)),dt.date(2026,11,26))=="Türkçe özet"
 
 def test_missing_digest():
-    assert send_digest.message_for(DB(None), dt.date(2026,11,26)) == (None, "digest_not_ready")
+    assert send_digest.message_for(DB(None),dt.date(2026,11,26)) is None
 
-def test_private_newsletter_never_delivered():
-    assert send_digest.message_for(DB(("Özel bülten", 1)), dt.date(2026,11,26)) == (None, "private_newsletter_digest")
+def test_weekly_digest():
+    assert send_digest.message_for(DB(("Haftalık",),7),dt.date(2026,11,26),7)=="Haftalık"
+
+def test_periods():
+    assert send_digest.due_periods(dt.date(2026,11,26))==[1]
+    assert send_digest.due_periods(dt.date(2026,11,30))==[1,7]
+    assert send_digest.due_periods(dt.date(2026,12,1))==[1,30]
+    assert send_digest.due_periods(dt.date(2027,2,1))==[1,7,30]

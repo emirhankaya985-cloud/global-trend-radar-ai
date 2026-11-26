@@ -1,45 +1,45 @@
-"""Deliver Turkish public-source digests without logging private content."""
+"""Deliver only the public research report table; never read Gmail summaries."""
 import argparse
 import datetime as dt
 import json
 import os
 from zoneinfo import ZoneInfo
-from radar import Store, notify
+from radar import Store, notify, digest
 
-def message_for(db, today):
-    row = db.q("SELECT report_text, newsletter_count FROM radar_turkish_digests WHERE report_date=?", (today,)).fetchone()
-    if not row:
-        return None, "digest_not_ready"
-    if row[1] != 0:
-        return None, "private_newsletter_digest"
-    return row[0], "ready"
+def message_for(db, today, days=1):
+    row = db.q("SELECT report_text FROM radar_public_digests WHERE period_days=? AND report_date=?", (days,today)).fetchone()
+    return row[0] if row else None
+
+def due_periods(today):
+    return [1] + ([7] if today.weekday()==0 else []) + ([30] if today.day==1 else [])
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--test", action="store_true")
-    args = parser.parse_args()
-    url = os.getenv("DATABASE_URL")
-    if not url:
-        parser.error("DATABASE_URL eksik")
-    db = Store(url)
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--test",action="store_true")
+    args=parser.parse_args()
+    url=os.getenv("DATABASE_URL")
+    if not url: parser.error("DATABASE_URL eksik")
+    db=Store(url)
     try:
-        today = dt.datetime.now(ZoneInfo("Europe/Istanbul")).date()
-        key = "turkish-daily:" + today.isoformat()
-        if args.test:
-            key = "notification-test:" + os.environ.get("GITHUB_RUN_ID", "local")
-            msg = "Global Trend Radar AI | Telegram/ntfy bağlantı testi. Özel veri içermez."
-        else:
-            msg, status = message_for(db, today)
-            if msg is None:
-                print(json.dumps({"status": status}))
-                return 0
-        deliveries = notify(db, msg, key)
-        print(json.dumps({"deliveries": deliveries, "configured": {"telegram": bool(os.getenv("TELEGRAM_BOT_TOKEN") and os.getenv("TELEGRAM_CHAT_ID")), "ntfy": bool(os.getenv("NTFY_TOPIC"))}}, ensure_ascii=False))
-        if args.test and not any(x["status"] == "sent" for x in deliveries):
-            return 1
-        return int(any(x["status"] != "sent" for x in deliveries))
+        now=dt.datetime.now(ZoneInfo("Europe/Istanbul"))
+        today=now.date()
+        failed=False
+        for days in ([1] if args.test else due_periods(today)):
+            if args.test:
+                key="notification-test:"+os.environ.get("GITHUB_RUN_ID","local")+":"+os.environ.get("GITHUB_RUN_ATTEMPT","1")
+                msg="Global Trend Radar AI | Bağlantı testi. Özel veri içermez."
+            else:
+                key="public-digest:"+str(days)+":"+today.isoformat()
+                msg=message_for(db,today,days)
+                if msg is None:
+                    print(json.dumps({"period_days":days,"status":"digest_not_ready"})); continue
+            deliveries=notify(db,msg,key)
+            existing=db.q("SELECT channel,status FROM radar_deliveries WHERE id IN (?,?)",(digest(key+"telegram"),digest(key+"ntfy"))).fetchall()
+            print(json.dumps({"period_days":days,"deliveries":deliveries,"recorded":existing},ensure_ascii=False))
+            if not any(x[1]=="sent" for x in existing): failed=True
+        return int(failed)
     finally:
         db.close()
 
-if __name__ == "__main__":
+if __name__=="__main__":
     raise SystemExit(main())
